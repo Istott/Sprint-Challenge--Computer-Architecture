@@ -10,6 +10,7 @@ class CPU:
         self.reg = [0] * 98
         self.pc = 0
         self.sp = 7
+        self.flag = 0b00000000 # null
         self.LDI = 0b10000010 # 128 + 2 = 130
         self.PRN = 0b01000111 # 64 + 4 + 2 + 1 = 71
         self.HLT = 0b00000001 # 1
@@ -19,6 +20,10 @@ class CPU:
         self.POP = 0b01000110 # 64 + 4 + 2 = 70
         self.CALL = 0b01010000 # 64 + 16 = 80
         self.RET = 0b00010001 # 16 + 1 = 17
+        self.CMP = 0b10100111 # 128 + 32 + 4 + 2 + 1 = 167
+        self.JMP = 0b01010100 # 64 + 16 + 4 + = 84
+        self.JEQ = 0b01010101 # 64 + 16 + 4 + 1 = 85
+        self.JNE = 0b01010110 # 64 + 16 + 4 + 2 = 86
 
 
     def ram_read(self, address = None):
@@ -147,6 +152,39 @@ class CPU:
                 self.reg[self.sp] += 1
                 self.pc = return_address
 
+            elif IR == self.CMP:
+                if self.reg[operand_a] == self.reg[operand_b]:
+                    self.flag = 0b00000001
+
+                elif self.reg[operand_a] > self.reg[operand_b]:
+                    self.flag = 0b00000010
+
+                else:
+                    self.flag = 0b00000000
+
+                self.pc += 3
+
+            elif IR == self.JMP:
+                self.address = self.reg[self.ram[self.pc + 1]]
+                self.pc = self.address
+
+            elif IR == self.JEQ:
+                if self.flag == 0b00000001:
+                    self.address = self.reg[self.ram[self.pc + 1]]
+                    self.pc = self.address
+
+                else:
+                    self.pc += 2
+
+            elif IR == self.JNE:
+                if self.flag == 0b00000000:
+                    self.address = self.reg[self.ram[self.pc + 1]]
+                    self.pc = self.address
+
+                else:
+                    self.pc += 2           
+
             else:
                 running = False
                 print(f"{IR} not found")
+
